@@ -10,9 +10,18 @@ class WikitextChainFormatter:
 
     def __init__(self, pathToFile, criteria, stopWords, exceptions, minArticleLength):
         self.pathToFile = pathToFile
+        self.stopWords = stopWords
+        self.exceptions = exceptions
+        self.minArticleLength = minArticleLength
 
         parsed = wtp.parse(self.read_file(pathToFile))
         labels, articles = self.split_into_titles_and_articles(parsed)
+
+        labels = [self.clean_titles(label, exceptions, self.stopWords) for label in labels]
+        articles = [self.clean_articel(article, exceptions, self.stopWords, self.minArticleLength) for article in
+                    articles]
+
+        self.data = pd.DataFrame({"Titles": labels, "Articel": articles})
 
     def read_file(self, path):
         with open(path, "r") as fp:
@@ -48,6 +57,38 @@ class WikitextChainFormatter:
         articels.append("".join(new_articel))
 
         return labels, articels
+
+    def remove_punctuation(articel, exceptions):
+        words = articel.split(" ")
+        words = [word for word in words if (word.isalpha() or word in exceptions)]
+        cleaned = " ".join(words)
+
+        return cleaned
+
+    def stop_word_removal(self, articel, stop_words):
+        words = articel.split(" ")
+        words = [word for word in words if word not in stop_words]
+        cleaned = " ".join(words)
+
+        return cleaned
+
+    def clean_articel(self, articel, exceptions, stop_words, min_length):
+        sentences = nltk.sent_tokenize(articel)
+        sentences = [sent.lower() for sent in sentences]
+        sentences = [sent.strip() for sent in sentences]
+        sentences = [sent for sent in sentences if len(sent) >= min_length]
+        sentences = [self.stop_word_removal(sent, stop_words) for sent in sentences]
+        sentences = [self.remove_punctuation(sent, exceptions) for sent in sentences]
+        sentences = [sent + "\n" for sent in sentences if len(sent) > min_length]
+
+        return "".join(sentences)
+
+    def clean_titles(self, title, exceptions, stop_words):
+        cleaned_title = title.lower().strip()
+        cleaned_title = self.stop_word_removal(cleaned_title, stop_words)
+        cleaned_title = self.remove_punctuation(cleaned_title, exceptions)
+
+        return "".join(cleaned_title)
 
 
 class WikitextCriteria:
