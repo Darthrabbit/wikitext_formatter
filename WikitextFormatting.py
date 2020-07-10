@@ -1,7 +1,7 @@
 import wikitextparser as wtp
 import nltk
 import pandas as pd
-
+from abc import ABC, abstractmethod
 
 class WikitextChainFormatter:
     """
@@ -95,7 +95,11 @@ class WikitextChainFormatter:
         return nltk.FreqDist(nltk.word_tokenize(" ".join([" ".join(self.data[frame]) for frame in self.data])))
 
 
-class WikitextCriteria:
+class WikitextCriteria(ABC):
     """
     Use to define what kind of words should be chosen from a given text
     """
+
+    @abstractmethod
+    def apply_criterion(self, data):
+        pass
