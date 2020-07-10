@@ -13,7 +13,7 @@ class WikitextChainFormatter:
         self.stopWords = stopWords
         self.exceptions = exceptions
         self.minArticleLength = minArticleLength
-
+        
         parsed = wtp.parse(self.read_file(pathToFile))
         labels, articles = self.split_into_titles_and_articles(parsed)
 
@@ -21,7 +21,8 @@ class WikitextChainFormatter:
         articles = [self.clean_articel(article, exceptions, self.stopWords, self.minArticleLength) for article in
                     articles]
 
-        self.data = pd.DataFrame({"Titles": labels, "Articel": articles})
+        self.data = pd.DataFrame({"Labels": labels, "Articel": articles})
+        self.frequency = self.get_frequency_from_data()
 
     def read_file(self, path):
         with open(path, "r") as fp:
@@ -89,6 +90,9 @@ class WikitextChainFormatter:
         cleaned_title = self.remove_punctuation(cleaned_title, exceptions)
 
         return "".join(cleaned_title)
+
+    def get_frequency_from_data(self):
+        return nltk.FreqDist(nltk.word_tokenize(" ".join([" ".join(self.data[frame]) for frame in self.data])))
 
 
 class WikitextCriteria:
