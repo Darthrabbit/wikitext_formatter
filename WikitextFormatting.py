@@ -18,7 +18,7 @@ class WikitextChainFormatter:
         articles = [self.clean_article(article, exceptions, stopWords, minArticleLength) for article in
                     articles]
 
-        self.data = pd.DataFrame({"Labels": labels, "Article": articles})
+        self.data = pd.DataFrame({"Labels": labels, "Articles": articles})
         self.frequency = self.get_frequency_from_data()
 
     def read_file(self, path):
@@ -95,7 +95,7 @@ class WikitextChainFormatter:
         formatted = pd.DataFrame(
             {
                 "Titles": self.data["Labels"],
-                "article": [criterion.apply_criterion(article) for article in self.data["Article"]]
+                "article": [criterion.apply_criterion(article) for article in self.data["Articles"]]
             })
 
         return formatted
