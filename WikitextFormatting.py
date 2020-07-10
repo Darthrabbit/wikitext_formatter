@@ -3,12 +3,13 @@ import nltk
 import pandas as pd
 from abc import ABC, abstractmethod
 
+
 class WikitextChainFormatter:
     """
     Format Wikipedia Texts and extract chain via different criteria from them
     """
 
-    def __init__(self, pathToFile, criteria, stopWords, exceptions, minArticleLength):
+    def __init__(self, pathToFile, stopWords, exceptions, minArticleLength):
         self.pathToFile = pathToFile
         self.stopWords = stopWords
         self.exceptions = exceptions
@@ -21,7 +22,7 @@ class WikitextChainFormatter:
         articles = [self.clean_articel(article, exceptions, self.stopWords, self.minArticleLength) for article in
                     articles]
 
-        self.data = pd.DataFrame({"Labels": labels, "Articel": articles})
+        self.data = pd.DataFrame({"Labels": labels, "Article": articles})
         self.frequency = self.get_frequency_from_data()
 
     def read_file(self, path):
@@ -94,6 +95,15 @@ class WikitextChainFormatter:
     def get_frequency_from_data(self):
         return nltk.FreqDist(nltk.word_tokenize(" ".join([" ".join(self.data[frame]) for frame in self.data])))
 
+    def get_formatted_dataset_by_criteria(self, criterion):
+        formatted = pd.DataFrame(
+            {
+                "Titles": self.data["Labels"],
+                "Articel": [criterion.apply_criterion(article) for article in self.data["Article"]]
+            })
+
+        return formatted
+
 
 class WikitextCriteria(ABC):
     """
@@ -103,3 +113,23 @@ class WikitextCriteria(ABC):
     @abstractmethod
     def apply_criterion(self, data):
         pass
+
+
+class FirstN(WikitextCriteria):
+    def __init__(self, number_of_words):
+        super().__init__()
+        self.first_n_words = number_of_words
+
+    def apply_criterion(self, data):
+        tokens = nltk.word_tokenize(data)
+        return tokens[0:self.first_n_words]
+
+
+class POSSelection(WikitextCriteria):
+    def __init__(self, tags):
+        super().__init__()
+        self.tags = tags
+
+    def apply_criterion(self, data):
+        pos_tags = nltk.pos_tag(nltk.word_tokenize(data))
+        return [word for word, tag in pos_tags if tag in self.tags]
