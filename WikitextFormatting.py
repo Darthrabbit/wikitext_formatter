@@ -23,7 +23,6 @@ def split_into_titles_and_articles(parsed):
     labels = []
     articles = []
     new_article = []
-    is_new = False
 
     labels.append(parsed.sections[1].title)
     new_article.append(parsed.sections[1].contents)
@@ -41,7 +40,10 @@ def split_into_titles_and_articles(parsed):
     return labels, articles
 
 
-def remove_punctuation(article, exceptions):
+def remove_punctuation(article, exceptions=None):
+    if exceptions is None:
+        exceptions = []
+
     words = article.split(" ")
     words = [word for word in words if (word.isalpha() or word in exceptions)]
     cleaned = " ".join(words)
@@ -49,7 +51,10 @@ def remove_punctuation(article, exceptions):
     return cleaned
 
 
-def stop_word_removal(article, stop_words):
+def stop_word_removal(article, stop_words=None):
+    if stop_words is None:
+        stop_words = []
+
     words = article.split(" ")
     words = [word for word in words if word not in stop_words]
     cleaned = " ".join(words)
@@ -57,7 +62,12 @@ def stop_word_removal(article, stop_words):
     return cleaned
 
 
-def clean_article(article, exceptions, stop_words, min_length):
+def clean_article(article, exceptions=None, stop_words=None, min_length=1):
+    if exceptions is None:
+        exceptions = []
+    if stop_words is None:
+        stop_words = []
+
     sentences = nltk.sent_tokenize(article)
     sentences = [sent.lower() for sent in sentences]
     sentences = [sent.strip() for sent in sentences]
@@ -70,6 +80,11 @@ def clean_article(article, exceptions, stop_words, min_length):
 
 
 def clean_titles(title, exceptions, stop_words):
+    if exceptions is None:
+        exceptions = []
+    if stop_words is None:
+        stop_words = []
+
     cleaned_title = title.lower().strip()
     cleaned_title = stop_word_removal(cleaned_title, stop_words)
     cleaned_title = remove_punctuation(cleaned_title, exceptions)
@@ -88,10 +103,6 @@ class WikitextChainFormatter:
 
     @classmethod
     def from_file(cls, pathToFile, minArticleLength, stopWords=None, exceptions=None):
-        if exceptions is None:
-            exceptions = []
-        if stopWords is None:
-            stopWords = []
 
         parsed = wtp.parse(read_file(pathToFile))
         labels, articles = split_into_titles_and_articles(parsed)
@@ -103,15 +114,13 @@ class WikitextChainFormatter:
 
     @classmethod
     def from_dataframe(cls, df, minArticleLength, stopWords=None, exceptions=None):
-        if exceptions is None:
-            exceptions = []
-        if stopWords is None:
-            stopWords = []
-
-        df["Lables"] = [clean_titles(label, exceptions, stopWords) for label in df["Lables"]]
+        df["Labels"] = [clean_titles(label, exceptions, stopWords) for label in df["Labels"]]
         df["Articles"] = [clean_article(article, exceptions, stopWords, minArticleLength) for article in df["Articles"]]
 
         return cls(df)
+
+    def __str__(self):
+        return self.data.__str__()
 
     def get_frequency_from_data(self):
         return nltk.FreqDist(nltk.word_tokenize(" ".join([" ".join(self.data[frame]) for frame in self.data])))
@@ -119,11 +128,11 @@ class WikitextChainFormatter:
     def get_formatted_dataset_by_criteria(self, criterion):
         formatted = pd.DataFrame(
             {
-                "Titles": self.data["Labels"],
-                "article": [criterion.apply_criterion(article) for article in self.data["Articles"]]
+                "Labels": self.data["Labels"],
+                "Articles": [" ".join(criterion.apply_criterion(article)) for article in self.data["Articles"]]
             })
 
-        return formatted
+        return WikitextChainFormatter(formatted)
 
 
 class WikitextCriteria(ABC):
