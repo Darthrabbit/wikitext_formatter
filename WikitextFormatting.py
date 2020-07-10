@@ -10,16 +10,12 @@ class WikitextChainFormatter:
     """
 
     def __init__(self, pathToFile, stopWords, exceptions, minArticleLength):
-        self.pathToFile = pathToFile
-        self.stopWords = stopWords
-        self.exceptions = exceptions
-        self.minArticleLength = minArticleLength
 
         parsed = wtp.parse(self.read_file(pathToFile))
         labels, articles = self.split_into_titles_and_articles(parsed)
 
-        labels = [self.clean_titles(label, exceptions, self.stopWords) for label in labels]
-        articles = [self.clean_articel(article, exceptions, self.stopWords, self.minArticleLength) for article in
+        labels = [self.clean_titles(label, exceptions, stopWords) for label in labels]
+        articles = [self.clean_articel(article, exceptions, stopWords, minArticleLength) for article in
                     articles]
 
         self.data = pd.DataFrame({"Labels": labels, "Article": articles})
