@@ -15,7 +15,7 @@ class WikitextChainFormatter:
         labels, articles = self.split_into_titles_and_articles(parsed)
 
         labels = [self.clean_titles(label, exceptions, stopWords) for label in labels]
-        articles = [self.clean_articel(article, exceptions, stopWords, minArticleLength) for article in
+        articles = [self.clean_article(article, exceptions, stopWords, minArticleLength) for article in
                     articles]
 
         self.data = pd.DataFrame({"Labels": labels, "Article": articles})
@@ -37,41 +37,41 @@ class WikitextChainFormatter:
             return int(header.count('=') / 2 + 1)
 
         labels = []
-        articels = []
-        new_articel = []
+        articles = []
+        new_article = []
         is_new = False
 
         labels.append(parsed.sections[1].title)
-        new_articel.append(parsed.sections[1].contents)
+        new_article.append(parsed.sections[1].contents)
 
         for sec in parsed.sections[2:]:
             if get_header_level(sec.title) == 1:
                 labels.append(sec.title)
-                articels.append("".join(new_articel))
-                new_articel = []
+                articles.append("".join(new_article))
+                new_article = []
 
-            new_articel.append(sec.contents)
+            new_article.append(sec.contents)
 
-        articels.append("".join(new_articel))
+        articles.append("".join(new_article))
 
-        return labels, articels
+        return labels, articles
 
-    def remove_punctuation(self, articel, exceptions):
-        words = articel.split(" ")
+    def remove_punctuation(self, article, exceptions):
+        words = article.split(" ")
         words = [word for word in words if (word.isalpha() or word in exceptions)]
         cleaned = " ".join(words)
 
         return cleaned
 
-    def stop_word_removal(self, articel, stop_words):
-        words = articel.split(" ")
+    def stop_word_removal(self, article, stop_words):
+        words = article.split(" ")
         words = [word for word in words if word not in stop_words]
         cleaned = " ".join(words)
 
         return cleaned
 
-    def clean_articel(self, articel, exceptions, stop_words, min_length):
-        sentences = nltk.sent_tokenize(articel)
+    def clean_article(self, article, exceptions, stop_words, min_length):
+        sentences = nltk.sent_tokenize(article)
         sentences = [sent.lower() for sent in sentences]
         sentences = [sent.strip() for sent in sentences]
         sentences = [sent for sent in sentences if len(sent) >= min_length]
@@ -95,7 +95,7 @@ class WikitextChainFormatter:
         formatted = pd.DataFrame(
             {
                 "Titles": self.data["Labels"],
-                "Articel": [criterion.apply_criterion(article) for article in self.data["Article"]]
+                "article": [criterion.apply_criterion(article) for article in self.data["Article"]]
             })
 
         return formatted
