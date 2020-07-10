@@ -13,7 +13,7 @@ class WikitextChainFormatter:
         self.stopWords = stopWords
         self.exceptions = exceptions
         self.minArticleLength = minArticleLength
-        
+
         parsed = wtp.parse(self.read_file(pathToFile))
         labels, articles = self.split_into_titles_and_articles(parsed)
 
@@ -59,7 +59,7 @@ class WikitextChainFormatter:
 
         return labels, articels
 
-    def remove_punctuation(articel, exceptions):
+    def remove_punctuation(self, articel, exceptions):
         words = articel.split(" ")
         words = [word for word in words if (word.isalpha() or word in exceptions)]
         cleaned = " ".join(words)
