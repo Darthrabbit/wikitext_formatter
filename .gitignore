@@ -1,4 +1,8 @@
 # https://github.com/github/gitignore/blob/master/Python.gitignore
+
+# Pycharm
+.idea
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
